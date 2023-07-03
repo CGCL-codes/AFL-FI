@@ -596,6 +596,18 @@ void add_to_queue(afl_state_t *afl, u8 *fname, u32 len, u8 passed_det) {
   q->testcase_buf = NULL;
   q->mother = afl->queue_cur;
 
+  q->distance = afl->cur_distance;
+  if (afl->cur_distance > 0) {
+    if (afl->max_distance <= 0) {
+      afl->max_distance = afl->cur_distance;
+      afl->min_distance = afl->min_distance;
+    }
+    if (afl->cur_distance > afl->max_distance)
+      afl->max_distance = afl->cur_distance;
+    if (afl->cur_distance < afl->min_distance)
+      afl->min_distance = afl->cur_distance;
+  }
+
 #ifdef INTROSPECTION
   q->bitsmap_size = afl->bitsmap_size;
 #endif
@@ -1158,6 +1170,20 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
     perf_score = 1;
 
   }
+
+  double power_factor = 1.0;
+  if (q->distance > 0) {
+    double normalized_d = 0;
+    normalized_d = (q->distance - afl->min_distance) /
+                   (afl->max_distance - afl->min_distance);
+
+    if (normalized_d >= 0) {
+      power_factor =
+          pow(2.0, 2.0 * (double)log2(MAX_FACTOR) * (1.0 - normalized_d));
+    }
+  }
+
+  perf_score *= power_factor;
 
   /* Make sure that we don't go over limit. */
 

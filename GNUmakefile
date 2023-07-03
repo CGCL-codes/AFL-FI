@@ -311,7 +311,7 @@ ifdef TEST_MMAP
 endif
 
 .PHONY: all
-all:	test_x86 test_shm test_python ready $(PROGS) afl-as llvm gcc_plugin test_build all_done
+all:	test_x86 test_shm test_python ready $(PROGS) afl-as llvm fault gcc_plugin test_build all_done
 	-$(MAKE) -C utils/aflpp_driver
 	@echo
 	@echo
@@ -329,6 +329,17 @@ endif
 llvm:
 	-$(MAKE) -j$(nproc) -f GNUmakefile.llvm
 	@test -e afl-cc || { echo "[-] Compiling afl-cc failed. You seem not to have a working compiler." ; exit 1; }
+
+.PHONY: fault fault-rt fault-analyzer
+fault: fault-rt fault-analyzer
+
+fault-rt:
+	-$(CC) $(CFLAGS) -c fault_injection/rt.c -Iinclude -o fj-rt.o
+	-$(CC) $(CFLAGS) -c fault_injection/fifuzz-rt.c -Iinclude -o fifuzz-rt.o
+
+fault-analyzer:
+	@cmake -S fault_injection -B fault_injection/build
+	@cmake --build fault_injection/build
 
 .PHONY: gcc_plugin
 gcc_plugin:

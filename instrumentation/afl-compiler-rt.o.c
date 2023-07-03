@@ -511,12 +511,12 @@ static void __afl_map_shm(void) {
     if (__afl_map_addr) {
 
       shm_base =
-          mmap((void *)__afl_map_addr, __afl_map_size, PROT_READ | PROT_WRITE,
+          mmap((void *)__afl_map_addr, __afl_map_size+16, PROT_READ | PROT_WRITE,
                MAP_FIXED_NOREPLACE | MAP_SHARED, shm_fd, 0);
 
     } else {
 
-      shm_base = mmap(0, __afl_map_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+      shm_base = mmap(0, __afl_map_size+16, PROT_READ | PROT_WRITE, MAP_SHARED,
                       shm_fd, 0);
 
     }
